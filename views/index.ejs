@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="/styles.css">
+    <title>Blog Personal</title>
+</head>
+<body>
+    <% if (message) { %>
+        <div class="alert <%= session.message.type === 'error' ? 'error' : 'success' %>">
+            <p><%= message.content %></p>
+        </div>
+    <% } %>
+    <header>
+        <h1>Blog Personal</h1>
+        <% if (user) { %>
+            <p class="welcome-message">¡Bienvenido, <%= user.username %>! </p>
+        <% } %>
+        <nav>
+            <% if (user) { %>
+                <a href="/logout">Cerrar Sesión</a>
+            <% } else { %>
+                <a href="/login">Iniciar Sesión</a>
+                <a href="/register">Registrarse</a>
+            <% } %>
+        </nav>
+    </header>
+
+    <div class="container">
+        <h2>Publicaciones Recientes</h2>
+        <% if (user) { %>
+            <a href="/post/new" class="button">Crear Nueva Publicación</a>
+        <% } %>
+
+        <% posts.forEach(post => { %>
+            <div class="post"> 
+                <h3><%= post.title %></h3>
+                <p><%= post.content %></p>
+
+                <% if (post.image) { %>
+                    <img src="/<%= post.image %>" alt="Imagen de la publicación" style="max-width: 100%;">
+                <% } %>
+
+                <p>Publicado por <%= post.author.username %> el <%= post.createdAt ? post.createdAt.toLocaleDateString() : 'Fecha desconocida' %></p>
+
+                <div class="likes">
+                    <span>Likes: <span id="likes-count-<%= post._id %>"><%= post.likesCount %></span></span>
+                    <button onclick="handleLike('<%= post._id %>')">👍</button>
+                    <span>Dislikes: <span id="dislikes-count-<%= post._id %>"><%= post.dislikesCount %></span></span>
+                    <button onclick="handleDislike('<%= post._id %>')">👎</button>
+                </div>
+
+                <% if (user && user._id.toString() === post.author._id.toString()) { %> 
+                    <div class="post-actions">
+                        <form action="/post/<%= post._id %>?_method=DELETE" method="POST" class="inline-form">
+                            <button type="submit" class="button delete-btn">Eliminar</button>
+                        </form>
+                        <a href="/post/<%= post._id %>/edit" class="button edit-btn">Editar</a>
+                    </div>
+                <% } %>
+
+                <div class="comment-box">
+                    <h3>Comentarios:</h3>
+                    <% if (user) { %>
+                        <form action="/post/<%= post._id %>/comment" method="POST">
+                            <textarea name="comment" placeholder="Escribe un comentario..." required></textarea>
+                            <button type="submit">Comentar</button>
+                        </form>
+                    <% } else { %>
+                        <h4>Inicia sesión para comentar.</h4>
+                    <% } %>
+                
+                    <div class="comments-scroll">
+                        <% if (post.comments.length > 0) { %>
+                            <% post.comments.slice().reverse().forEach(comment => { %>
+                                <p>
+                                    <strong><%= comment.author ? comment.author.username : 'Anónimo' %>:</strong> 
+                                    <%= comment.content %>
+                                </p>
+                            <% }); %>
+                        <% } else { %>
+                            <p>No hay comentarios aún.</p>
+                        <% } %>
+                    </div>
+                </div>                
+            </div>
+        <% }); %>
+    </div>
+
+    <script>
+        async function handleLike(postId) {
+            const response = await fetch(`/post/${postId}/like`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                document.getElementById(`likes-count-${postId}`).innerText = data.likesCount;
+            } else {
+                console.error('Error al dar like');
+            }
+        }
+
+        async function handleDislike(postId) {
+            const response = await fetch(`/post/${postId}/dislike`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                document.getElementById(`dislikes-count-${postId}`).innerText = data.dislikesCount;
+            } else {
+                console.error('Error al dar dislike');
+            }
+        }
+    </script>
+</body>
+</html>

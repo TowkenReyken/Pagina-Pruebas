@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="/styles.css">
+    <title>Nueva Publicación</title>
+</head>
+<body>
+    <% if (session.message) { %>
+        <div class="alert <%= session.message.type === 'error' ? 'error' : 'success' %>">
+            <p><%= session.message.content %></p>
+        </div>
+        <% delete session.message; %> <!-- Elimina el mensaje después de mostrarlo -->
+    <% } %>
+    <header>
+        <h1>Crear Nueva Entrada</h1>
+        <% if (user) { %>
+            <p class="welcome-message">¡Bienvenido, <%= user.username %>! </p>
+        <% } %>
+        <nav>
+            <% if (user) { %>
+                <a href="/logout">Cerrar Sesión</a>
+            <% } else { %>
+                <a href="/login">Iniciar Sesión</a>
+                <a href="/register">Registrarse</a>
+            <% } %>
+        </nav>
+    </header>
+
+    <div class="container">
+        <form action="/post" method="POST" enctype="multipart/form-data">
+            <input type="text" name="title" placeholder="Título" required>
+            <textarea name="content" placeholder="Contenido" rows="5" required></textarea>
+            <input type="file" name="image">
+            <button type="submit">Publicar</button>
+        </form>
+    </div>
+</body>
+</html>
